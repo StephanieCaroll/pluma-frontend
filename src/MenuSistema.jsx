@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -75,7 +75,7 @@ export const FooterComponent = () => {
         <Grid container spacing={4}>
           <Grid item xs={12} md={4}>
             <Typography variant="h6" gutterBottom sx={{ color: 'secondary.main' }}>
-              Pluma Hebenum
+              Pluma
             </Typography>
             <Typography variant="body2">
               Uma biblioteca dedicada à preservação e celebração da literatura gótica e de horror.
@@ -101,40 +101,13 @@ export const FooterComponent = () => {
               </Typography>
             ))}
           </Grid>
-          <Grid item xs={12} md={4}>
-            <Typography variant="subtitle1" gutterBottom>
-              Inscreva-se em nossa newsletter
-            </Typography>
-            <Box component="form" sx={{ display: 'flex', mt: 1 }}>
-              <input
-                type="email"
-                placeholder="Seu e-mail"
-                style={{
-                  flexGrow: 1,
-                  backgroundColor: 'transparent',
-                  border: '1px solid rgba(199, 163, 79, 0.3)',
-                  padding: '8px 12px',
-                  color: 'white',
-                  fontFamily: '"Crimson Text", serif',
-                  outline: 'none'
-                }}
-              />
-              <Button
-                variant="contained"
-                color="secondary"
-                sx={{
-                  ml: 1,
-                  borderRadius: 0
-                }}
-              >
-                Enviar
-              </Button>
-            </Box>
+          <Grid item xs={12} md={4}>      
+          
           </Grid>
         </Grid>
         <Divider sx={{ my: 4 }} />
         <Typography variant="body2" align="center">
-          © {new Date().getFullYear()} Pluma Hebenum. Todos os direitos reservados.
+          © {new Date().getFullYear()} Pluma. Todos os direitos reservados.
         </Typography>
       </Container>
     </Box>
@@ -150,7 +123,11 @@ const MenuSistema = () => {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-
+  
+  // A correção está aqui: o hook useNavigate foi adicionado à importação no topo do arquivo.
+  // Isso resolve o erro de "useNavigate is not defined".
+  const navigate = useNavigate(); 
+  
   return (
     <AppBar position="static" sx={{ backgroundColor: backgroundDark, boxShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
       <Toolbar sx={{ flexDirection: 'column', alignItems: 'center', pt: 1, pb: 0 }}>
@@ -233,9 +210,12 @@ const MenuSistema = () => {
 
           {/* Ícones à direita */}
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <IconButton sx={{ color: 'white', transition: '0.3s', '&:hover': { color: goldLight } }}><AccountCircleIcon /></IconButton>
+            <IconButton onClick={() => navigate('/form-login')} sx={{ color: 'white', transition: '0.3s', '&:hover': { color: goldLight } }}>
+              <AccountCircleIcon />
+            </IconButton>
+
             <IconButton sx={{ color: 'white', transition: '0.3s', '&:hover': { color: goldLight } }}><FavoriteBorderIcon /></IconButton>
-            <IconButton sx={{ color: 'white', transition: '0.3s', '&:hover': { color: goldLight } }}><ShoppingCartIcon /></IconButton>
+            <IconButton onClick={() => navigate('/carrinho')} sx={{ color: 'white', transition: '0.3s', '&:hover': { color: goldLight } }}><ShoppingCartIcon /></IconButton>
           </Box>
         </Box>
       </Toolbar>
