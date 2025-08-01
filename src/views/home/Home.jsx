@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import {
   Typography,
@@ -10,7 +10,8 @@ import {
   CardMedia,
   CardContent,
   CssBaseline,
-  Paper
+  Paper,
+  Fade
 } from '@mui/material';
 
 import '@fontsource/monsieur-la-doulaise';
@@ -19,6 +20,7 @@ import 'slick-carousel/slick/slick-theme.css';
 import Slider from 'react-slick';
 
 import { FooterComponent } from '../../MenuSistema';
+
 const gothicTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -260,202 +262,255 @@ const PromotionalCarousel = () => {
   );
 };
 
+const quotes = [
+  {
+    text: "O mais antigo e mais forte sentimento da humanidade é o medo, e o mais antigo e mais forte tipo de medo é o medo do desconhecido.",
+    author: "H.P. Lovecraft"
+  },
+  {
+    text: "O homem nunca esteve tão próximo de si mesmo quanto quando se sente longe de si.",
+    author: "Franz Kafka"
+  },
+  {
+    text: "Não há maior terror do que a escuridão da mente.",
+    author: "Edgar Allan Poe"
+  },
+  {
+    text: "O horror sempre nasce de algo que amamos ou desejamos, mas que se corrompe.",
+    author: "Clive Barker"
+  },
+  {
+    text: "A loucura é uma fuga para uma realidade que não aguentamos mais.",
+    author: "Mary Shelley"
+  }
+];
+
+const AnimatedQuote = () => {
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  const [inProp, setInProp] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setInProp(false);
+      setTimeout(() => {
+        setQuoteIndex((prevIndex) => (prevIndex + 1) % quotes.length);
+        setInProp(true);
+      }, 1000); 
+    }, 8000); 
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const currentQuote = quotes[quoteIndex];
+
+  return (
+    <Fade in={inProp} timeout={{ enter: 1000, exit: 1000 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 4,
+          backgroundColor: 'rgba(40, 0, 0, 0.2)',
+          borderLeft: '4px solid',
+          borderColor: 'secondary.main',
+          position: 'relative',
+          overflow: 'hidden',
+          minHeight: { xs: '300px', md: '310px' }, 
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          '&::before': {
+            content: '"„"',
+            position: 'absolute',
+            top: -40,
+            left: 20,
+            fontSize: '8rem',
+            color: 'rgba(199, 163, 79, 0.1)',
+            fontFamily: 'Georgia, serif',
+            lineHeight: 1
+          }
+        }}
+      >
+        <Typography
+          variant="h4"
+          sx={{
+            fontFamily: '"Monsieur La Doulaise", cursive',
+            fontSize: { xs: '2.5rem', md: '3.5rem' },
+            color: '#E8C87E',
+            fontWeight: 400,
+            fontStyle: 'normal',
+            lineHeight: 1.2,
+            position: 'relative',
+            zIndex: 1
+          }}
+        >
+          "{currentQuote.text}"
+        </Typography>
+        <Typography
+          variant="subtitle1"
+          align="right"
+          sx={{
+            mt: 2,
+            color: 'secondary.main',
+            fontWeight: 500
+          }}
+        >
+          — {currentQuote.author}
+        </Typography>
+      </Paper>
+    </Fade>
+  );
+};
+
 const Home = () => {
   return (
     <ThemeProvider theme={gothicTheme}>
       <CssBaseline />
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundImage: 'linear-gradient(to bottom, #0A0A0A, #1A1A1A)',
-          position: 'relative',
-          overflow: 'hidden',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '100%',
-            backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(199, 163, 79, 0.05) 0%, transparent 20%)',
-            pointerEvents: 'none'
-          }
-        }}
-      >
-        <Box sx={{ flexGrow: 1 }}>
-          <PromotionalCarousel />
+      <>
+        <Box
+          sx={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundImage: 'linear-gradient(to bottom, #0A0A0A, #1A1A1A)',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '100%',
+              backgroundImage: 'radial-gradient(circle at 20% 30%, rgba(199, 163, 79, 0.05) 0%, transparent 20%)',
+              pointerEvents: 'none'
+            }
+          }}
+        >
+          <Box sx={{ flexGrow: 1 }}>
+            <PromotionalCarousel />
 
-          <Box component="section" sx={{ py: 8 }}>
-            <Container maxWidth="xl" sx={{ textAlign: 'center' }}>
-              <Typography
-                variant="h2"
-                align="center"
-                sx={{
-                  mb: 6,
-                  position: 'relative',
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    bottom: -12,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: '80px',
-                    height: '2px',
-                    backgroundColor: 'secondary.main'
-                  }
-                }}
-              >
-                Obras Primas
-              </Typography>
+            <Box component="section" sx={{ py: 8 }}>
+              <Container maxWidth="xl" sx={{ textAlign: 'center' }}>
+                <Typography
+                  variant="h2"
+                  align="center"
+                  sx={{
+                    mb: 6,
+                    position: 'relative',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      bottom: -12,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '80px',
+                      height: '2px',
+                      backgroundColor: 'secondary.main'
+                    }
+                  }}
+                >
+                  Obras Primas
+                </Typography>
 
-              <Grid container spacing={4} justifyContent="center">
-                {livrosExemplo.map((livro) => (
-                  <Grid item key={livro.id} xs={12} sm={6} md={3}>
-                    <Card sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      position: 'relative',
-                      '&:hover': {
-                        '& .card-overlay': {
-                          opacity: 1
-                        }
-                      }
-                    }}>
-                      <CardMedia
-                        component="img"
-                        height="450"
-                        image={livro.imagem}
-                        alt={livro.titulo}
-                        sx={{
-                          filter: 'grayscale(20%)',
-                          '&:hover': {
-                            filter: 'none'
-                          }
-                        }}
-                      />
-                      <Box
-                        className="card-overlay"
-                        sx={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          background: 'linear-gradient(to top, rgba(10, 10, 10, 0.9) 0%, rgba(10, 10, 10, 0.3) 100%)',
-                          opacity: 0,
-                          transition: 'opacity 0.3s ease',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'flex-end',
-                          p: 3
-                        }}
-                      >
-                        <Typography variant="h6" sx={{ color: 'secondary.main' }}>
-                          {livro.titulo}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.primary', mb: 2 }}>
-                          {livro.autor}
-                        </Typography>
-                        <Typography variant="body2" sx={{
-                          color: 'text.secondary',
-                          fontSize: '0.8rem',
-                          fontStyle: 'italic',
-                          mb: 2
-                        }}>
-                          {livro.descricao}
-                        </Typography>
-                      </Box>
-                      <CardContent sx={{
-                        flexGrow: 1,
-                        textAlign: 'center',
+                <Grid container spacing={4} justifyContent="center">
+                  {livrosExemplo.map((livro) => (
+                    <Grid item key={livro.id} xs={12} sm={6} md={3}>
+                      <Card sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
                         position: 'relative',
-                        zIndex: 1,
-                        backgroundColor: 'rgba(18, 18, 18, 0.7)'
+                        '&:hover': {
+                          '& .card-overlay': {
+                            opacity: 1
+                          }
+                        }
                       }}>
-                        <Typography gutterBottom variant="h6" component="div">
-                          {livro.titulo}
-                        </Typography>
-                        <Typography variant="body2" color="secondary">
-                          {livro.autor}
-                        </Typography>
-                        <Button
-                          variant="contained"
-                          color="secondary"
+                        <CardMedia
+                          component="img"
+                          height="450"
+                          image={livro.imagem}
+                          alt={livro.titulo}
                           sx={{
-                            mt: 2,
-                            width: '100%'
+                            filter: 'grayscale(20%)',
+                            '&:hover': {
+                              filter: 'none'
+                            }
+                          }}
+                        />
+                        <Box
+                          className="card-overlay"
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'linear-gradient(to top, rgba(10, 10, 10, 0.9) 0%, rgba(10, 10, 10, 0.3) 100%)',
+                            opacity: 0,
+                            transition: 'opacity 0.3s ease',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'flex-end',
+                            p: 3
                           }}
                         >
-                          Explorar
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Container>
-          </Box>
+                          <Typography variant="h6" sx={{ color: 'secondary.main' }}>
+                            {livro.titulo}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'text.primary', mb: 2 }}>
+                            {livro.autor}
+                          </Typography>
+                          <Typography variant="body2" sx={{
+                            color: 'text.secondary',
+                            fontSize: '0.8rem',
+                            fontStyle: 'italic',
+                            mb: 2
+                          }}>
+                            {livro.descricao}
+                          </Typography>
+                        </Box>
+                        <CardContent sx={{
+                          flexGrow: 1,
+                          textAlign: 'center',
+                          position: 'relative',
+                          zIndex: 1,
+                          backgroundColor: 'rgba(18, 18, 18, 0.7)'
+                        }}>
+                          <Typography gutterBottom variant="h6" component="div">
+                            {livro.titulo}
+                          </Typography>
+                          <Typography variant="body2" color="secondary">
+                            {livro.autor}
+                          </Typography>
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            sx={{
+                              mt: 2,
+                              width: '100%'
+                            }}
+                          >
+                            Explorar
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Container>
+            </Box>
 
-          <Box component="section" sx={{ py: 10, backgroundColor: 'rgba(10, 10, 10, 0.5)' }}>
-            <Container maxWidth="lg">
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 4,
-                  backgroundColor: 'rgba(40, 0, 0, 0.2)',
-                  borderLeft: '4px solid',
-                  borderColor: 'secondary.main',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  '&::before': {
-                    content: '"„"',
-                    position: 'absolute',
-                    top: -40,
-                    left: 20,
-                    fontSize: '8rem',
-                    color: 'rgba(199, 163, 79, 0.1)',
-                    fontFamily: 'Georgia, serif',
-                    lineHeight: 1
-                  }
-                }}
-              >
-                <Typography
-                  variant="h4"
-                  sx={{
-                    fontFamily: '"Monsieur La Doulaise", cursive',
-                    fontSize: { xs: '2.5rem', md: '3.5rem' },
-                    color: '#E8C87E',
-                    fontWeight: 400,
-                    fontStyle: 'normal',
-                    lineHeight: 1.2,
-                    position: 'relative',
-                    zIndex: 1
-                  }}
-                >
-                  "A mais antiga e mais forte emoção da humanidade é o medo, e o mais antigo e mais forte tipo de medo é o medo do desconhecido."
-                </Typography>
-                <Typography
-                  variant="subtitle1"
-                  align="right"
-                  sx={{
-                    mt: 2,
-                    color: 'secondary.main',
-                    fontWeight: 500
-                  }}
-                >
-                  — H.P. Lovecraft
-                </Typography>
-              </Paper>
-            </Container>
+            <Box component="section" sx={{ py: 10, backgroundColor: 'rgba(10, 10, 10, 0.5)' }}>
+              <Container maxWidth="lg">
+                <AnimatedQuote />
+              </Container>
+            </Box>
           </Box>
-        </Box> 
-      </Box>
-       <FooterComponent />
+        </Box>
+        <FooterComponent />
+      </>
     </ThemeProvider>
-    
   );
 };
 
