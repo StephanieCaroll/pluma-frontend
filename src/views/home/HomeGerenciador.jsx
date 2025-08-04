@@ -237,7 +237,7 @@ const HomeGerenciador = () => {
     setSnackbarAberto(false);
   };
 
-  const abrirVisualizadorPDF = (url) => {
+const abrirVisualizadorPDF = (url) => {
     if (!url) {
       mostrarSnackbar('Nenhum PDF disponível para este livro', 'warning');
       return;
@@ -246,15 +246,17 @@ const HomeGerenciador = () => {
     let urlPdfParaMostrar = url;
     
     if (url instanceof File) {
+      // Se for um arquivo novo ainda não enviado ao servidor
       urlPdfParaMostrar = URL.createObjectURL(url);
-    } else if (!url.startsWith('http') && !url.startsWith('blob:')) {
-      const urlLimpa = url.replace(/^\/?uploads\//, '');
-      urlPdfParaMostrar = `http://localhost:8080/uploads/${urlLimpa}`;
+    } else {
+      // Extrai apenas o nome do arquivo (remove '/uploads/' se existir)
+      const nomeArquivo = url.split('/').pop();
+      urlPdfParaMostrar = `http://localhost:8080/api/arquivos/livro/${encodeURIComponent(nomeArquivo)}`;
     }
 
     setUrlPdf(urlPdfParaMostrar);
     setVisualizadorPdfAberto(true);
-  };
+};
 
   const fecharVisualizadorPDF = () => {
     setVisualizadorPdfAberto(false);
