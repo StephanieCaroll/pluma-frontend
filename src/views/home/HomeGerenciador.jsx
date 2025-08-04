@@ -249,7 +249,7 @@ const HomeGerenciador = () => {
       urlPdfParaMostrar = URL.createObjectURL(url);
     } else if (!url.startsWith('http') && !url.startsWith('blob:')) {
       const urlLimpa = url.replace(/^\/?uploads\//, '');
-      urlPdfParaMostrar = `http://localhost:8080/api/arquivos/livro/${urlLimpa}`;
+      urlPdfParaMostrar = `http://localhost:8080/uploads/${urlLimpa}`;
     }
 
     setUrlPdf(urlPdfParaMostrar);
@@ -324,105 +324,103 @@ const HomeGerenciador = () => {
     inputArquivoRef.current.click();
   };
 
-const adicionarLivro = async (livroData) => {
-  try {
-    setCarregando(true);
-    
-    // Validação dos campos obrigatórios
-    if (!livroData.titulo?.trim() || !livroData.autor?.trim() || !livroData.genero?.trim()) {
-      throw new Error("Preencha todos os campos obrigatórios (Título, Autor, Gênero)");
-    }
-
-    const formData = new FormData();
-    
-    // Adiciona cada campo individualmente ao FormData
-    formData.append('titulo', livroData.titulo.trim());
-    formData.append('autor', livroData.autor.trim());
-    formData.append('genero', livroData.genero.trim());
-    formData.append('preco', parseFloat(livroData.preco) || 0);
-    formData.append('descricao', livroData.descricao?.trim() || "");
-    formData.append('anoPublicacao', parseInt(livroData.anoPublicacao) || new Date().getFullYear());
-    formData.append('urlCapa', livroData.urlCapa?.trim() || "https://via.placeholder.com/300x450?text=Capa+do+Livro");
-    formData.append('numeroPaginas', parseInt(livroData.numeroPaginas) || 0);
-    formData.append('idioma', livroData.idioma?.trim() || "Português");
-    formData.append('estoque', parseInt(livroData.estoque) || 0);
-    
-    // Adiciona o arquivo PDF se existir
-    if (livroData.arquivoPDF instanceof File) {
-      formData.append('arquivo', livroData.arquivoPDF);
-    }
-
-    // Configuração do Axios
-    const config = {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      withCredentials: true
-    };
-
-    const response = await api.post('/livros', formData, config);
-    
-    setLivros(prev => [...prev, response.data]);
-    mostrarSnackbar('Livro adicionado com sucesso!', 'success');
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao adicionar livro:', {
-      message: error.message,
-      response: error.response?.data,
-      config: error.config
-    });
-    
-    const errorMessage = error.response?.data?.message || 
-                        error.message || 
-                        'Erro ao adicionar livro. Verifique os dados e tente novamente.';
-    
-    mostrarSnackbar(errorMessage, 'error');
-    throw error;
-  } finally {
-    setCarregando(false);
-  }
-};
-
- const editarLivro = async (livroData) => {
-  try {
-    setCarregando(true);
-    const formData = new FormData();
-    
-    // Adiciona cada campo individualmente ao FormData
-    formData.append('id', livroData.id);
-    formData.append('titulo', livroData.titulo.trim());
-    formData.append('autor', livroData.autor.trim());
-    formData.append('genero', livroData.genero.trim());
-    formData.append('preco', parseFloat(livroData.preco) || 0);
-    formData.append('descricao', livroData.descricao?.trim() || "");
-    formData.append('anoPublicacao', parseInt(livroData.anoPublicacao) || new Date().getFullYear());
-    formData.append('urlCapa', livroData.urlCapa?.trim() || "");
-    formData.append('numeroPaginas', parseInt(livroData.numeroPaginas) || 0);
-    formData.append('idioma', livroData.idioma?.trim() || "Português");
-    formData.append('estoque', parseInt(livroData.estoque) || 0);
-
-    if (livroData.arquivoPDF) {
-      formData.append('arquivo', livroData.arquivoPDF);
-    }
-
-    const response = await api.put(`/livros/${livroData.id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+  const adicionarLivro = async (livroData) => {
+    try {
+      setCarregando(true);
+      
+      if (!livroData.titulo?.trim() || !livroData.autor?.trim() || !livroData.genero?.trim()) {
+        throw new Error("Preencha todos os campos obrigatórios (Título, Autor, Gênero)");
       }
-    });
-    
-    setLivros(prev => prev.map(l => l.id === livroData.id ? response.data : l));
-    mostrarSnackbar('Livro atualizado com sucesso!', 'success');
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao editar livro:', error);
-    const errorMessage = error.response?.data?.message || 'Erro ao editar livro';
-    mostrarSnackbar(errorMessage, 'error');
-    throw error;
-  } finally {
-    setCarregando(false);
-  }
-};
+
+      const formData = new FormData();
+      
+      const livroObj = {
+        titulo: livroData.titulo.trim(),
+        autor: livroData.autor.trim(),
+        genero: livroData.genero.trim(),
+        preco: parseFloat(livroData.preco) || 0,
+        descricao: livroData.descricao?.trim() || "",
+        anoPublicacao: parseInt(livroData.anoPublicacao) || new Date().getFullYear(),
+        urlCapa: livroData.urlCapa?.trim() || "https://via.placeholder.com/300x450?text=Capa+do+Livro",
+        numeroPaginas: parseInt(livroData.numeroPaginas) || 0,
+        idioma: livroData.idioma?.trim() || "Português",
+        estoque: parseInt(livroData.estoque) || 0,
+        urlArquivoPDF: livroData.urlArquivoPDF || ""
+      };
+
+      formData.append('livro', JSON.stringify(livroObj));
+      
+      if (livroData.arquivoPDF instanceof File) {
+        formData.append('arquivo', livroData.arquivoPDF);
+      }
+
+      const response = await api.post('/livros', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      setLivros(prev => [...prev, response.data]);
+      mostrarSnackbar('Livro adicionado com sucesso!', 'success');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao adicionar livro:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Erro ao adicionar livro. Verifique os dados e tente novamente.';
+      
+      mostrarSnackbar(errorMessage, 'error');
+      throw error;
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  const editarLivro = async (livroData) => {
+    try {
+      setCarregando(true);
+      const formData = new FormData();
+      
+      const livroObj = {
+        id: livroData.id,
+        titulo: livroData.titulo.trim(),
+        autor: livroData.autor.trim(),
+        genero: livroData.genero.trim(),
+        preco: parseFloat(livroData.preco) || 0,
+        descricao: livroData.descricao?.trim() || "",
+        anoPublicacao: parseInt(livroData.anoPublicacao) || new Date().getFullYear(),
+        urlCapa: livroData.urlCapa?.trim() || "",
+        numeroPaginas: parseInt(livroData.numeroPaginas) || 0,
+        idioma: livroData.idioma?.trim() || "Português",
+        estoque: parseInt(livroData.estoque) || 0,
+        urlArquivoPDF: livroData.urlArquivoPDF || ""
+      };
+
+      formData.append('livro', JSON.stringify(livroObj));
+
+      if (livroData.arquivoPDF) {
+        formData.append('arquivo', livroData.arquivoPDF);
+      }
+
+      const response = await api.put(`/livros/${livroData.id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      setLivros(prev => prev.map(l => l.id === livroData.id ? response.data : l));
+      mostrarSnackbar('Livro atualizado com sucesso!', 'success');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao editar livro:', error);
+      const errorMessage = error.response?.data?.message || 'Erro ao editar livro';
+      mostrarSnackbar(errorMessage, 'error');
+      throw error;
+    } finally {
+      setCarregando(false);
+    }
+  };
+
   const salvarLivro = async () => {
     try {
       if (!livroEditando.titulo || !livroEditando.autor || !livroEditando.genero) {
