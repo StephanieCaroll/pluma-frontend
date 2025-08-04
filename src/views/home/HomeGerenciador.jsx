@@ -327,56 +327,62 @@ const abrirVisualizadorPDF = (url) => {
   };
 
   const adicionarLivro = async (livroData) => {
-    try {
-      setCarregando(true);
-      
-      if (!livroData.titulo?.trim() || !livroData.autor?.trim() || !livroData.genero?.trim()) {
-        throw new Error("Preencha todos os campos obrigatórios (Título, Autor, Gênero)");
-      }
-
-      const formData = new FormData();
-      
-      const livroObj = {
-        titulo: livroData.titulo.trim(),
-        autor: livroData.autor.trim(),
-        genero: livroData.genero.trim(),
-        preco: parseFloat(livroData.preco) || 0,
-        descricao: livroData.descricao?.trim() || "",
-        anoPublicacao: parseInt(livroData.anoPublicacao) || new Date().getFullYear(),
-        urlCapa: livroData.urlCapa?.trim() || "https://via.placeholder.com/300x450?text=Capa+do+Livro",
-        numeroPaginas: parseInt(livroData.numeroPaginas) || 0,
-        idioma: livroData.idioma?.trim() || "Português",
-        estoque: parseInt(livroData.estoque) || 0,
-        urlArquivoPDF: livroData.urlArquivoPDF || ""
-      };
-
-      formData.append('livro', JSON.stringify(livroObj));
-      
-      if (livroData.arquivoPDF instanceof File) {
-        formData.append('arquivo', livroData.arquivoPDF);
-      }
-
-      const response = await api.post('/livros', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      
-      setLivros(prev => [...prev, response.data]);
-      mostrarSnackbar('Livro adicionado com sucesso!', 'success');
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao adicionar livro:', error);
-      const errorMessage = error.response?.data?.message || 
-                          error.message || 
-                          'Erro ao adicionar livro. Verifique os dados e tente novamente.';
-      
-      mostrarSnackbar(errorMessage, 'error');
-      throw error;
-    } finally {
-      setCarregando(false);
+  try {
+    setCarregando(true);
+    
+    if (!livroData.titulo?.trim() || !livroData.autor?.trim() || !livroData.genero?.trim()) {
+      throw new Error("Preencha todos os campos obrigatórios (Título, Autor, Gênero)");
     }
-  };
+
+    const formData = new FormData();
+    
+    const livroObj = {
+      titulo: livroData.titulo.trim(),
+      autor: livroData.autor.trim(),
+      genero: livroData.genero.trim(),
+      preco: parseFloat(livroData.preco) || 0,
+      descricao: livroData.descricao?.trim() || "",
+      anoPublicacao: parseInt(livroData.anoPublicacao) || new Date().getFullYear(),
+      urlCapa: livroData.urlCapa?.trim() || "https://via.placeholder.com/300x450?text=Capa+do+Livro",
+      numeroPaginas: parseInt(livroData.numeroPaginas) || 0,
+      idioma: livroData.idioma?.trim() || "Português",
+      estoque: parseInt(livroData.estoque) || 0,
+      urlArquivoPDF: livroData.urlArquivoPDF || ""
+    };
+
+    formData.append('livro', JSON.stringify(livroObj));
+    
+    if (livroData.arquivoPDF instanceof File) {
+      formData.append('arquivo', livroData.arquivoPDF);
+    }
+
+    const response = await api.post('/livros', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    // Atualize desta forma para garantir que o estado anterior seja mantido
+    setLivros(prevLivros => {
+      // Verifique se o livro já existe para evitar duplicatas
+      const livroExiste = prevLivros.some(l => l.id === response.data.id);
+      return livroExiste ? prevLivros : [...prevLivros, response.data];
+    });
+    
+    mostrarSnackbar('Livro adicionado com sucesso!', 'success');
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao adicionar livro:', error);
+    const errorMessage = error.response?.data?.message || 
+                        error.message || 
+                        'Erro ao adicionar livro. Verifique os dados e tente novamente.';
+    
+    mostrarSnackbar(errorMessage, 'error');
+    throw error;
+  } finally {
+    setCarregando(false);
+  }
+};
 
   const editarLivro = async (livroData) => {
     try {
