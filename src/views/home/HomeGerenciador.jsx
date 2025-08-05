@@ -42,6 +42,7 @@ import {
 } from '@mui/icons-material';
 import axios from 'axios';
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { FooterComponent } from '../../MenuSistema';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
@@ -1188,6 +1189,7 @@ const abrirVisualizadorPDF = (url) => {
           {mensagemSnackbar}
         </Alert>
       </Snackbar>
+      <FooterComponent />
     </Box>
   );
 };
