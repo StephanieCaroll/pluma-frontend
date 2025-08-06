@@ -156,37 +156,6 @@ const gothicTheme = createTheme({
   }
 });
 
-const livrosExemplo = [
-  {
-    id: 1,
-    titulo: 'A Sombra sobre Innsmouth',
-    autor: 'H. P. Lovecraft',
-    descricao: 'Um relato perturbador de criaturas marinhas e horrores ancestrais.',
-    imagem: 'https://placehold.co/300x450/121212/C7A34F?font=playfair-display&text=Innsmouth'
-  },
-  {
-    id: 2,
-    titulo: 'Drácula',
-    autor: 'Bram Stoker',
-    descricao: 'A história definitiva do vampiro mais famoso da literatura.',
-    imagem: 'https://placehold.co/300x450/121212/C7A34F?font=playfair-display&text=Dracula'
-  },
-  {
-    id: 3,
-    titulo: 'Frankenstein',
-    autor: 'Mary Shelley',
-    descricao: 'Uma meditação sobre a criação e a natureza da humanidade.',
-    imagem: 'https://placehold.co/300x450/121212/C7A34F?font=playfair-display&text=Frankenstein'
-  },
-  {
-    id: 4,
-    titulo: 'O Retrato de Dorian Gray',
-    autor: 'Oscar Wilde',
-    descricao: 'Um conto moral sobre beleza, decadência e a dupla natureza humana.',
-    imagem: 'https://placehold.co/300x450/121212/C7A34F?font=playfair-display&text=Dorian+Gray'
-  },
-];
-
 const promoBanners = [
   {
     id: 1,
@@ -362,6 +331,61 @@ const AnimatedQuote = () => {
 };
 
 const Home = () => {
+  const [livros, setLivros] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
+
+  useEffect(() => {
+    const carregarLivros = async () => {
+      try {
+        setCarregando(true);
+        const resposta = await fetch('http://localhost:8080/api/livros');
+        if (!resposta.ok) throw new Error('Erro ao buscar livros');
+        const data = await resposta.json();
+        setLivros(data);
+        setErro(null);
+      } catch (err) {
+        setErro('Erro ao carregar livros');
+      } finally {
+        setCarregando(false);
+      }
+    };
+    carregarLivros();
+  }, []);
+
+  // Modal de detalhes do livro
+  const [modalAberto, setModalAberto] = useState(false);
+  const [livroSelecionado, setLivroSelecionado] = useState(null);
+
+  const abrirModal = (livro) => {
+    setLivroSelecionado(livro);
+    setModalAberto(true);
+    setMostrarPdf(false);
+  };
+  const fecharModal = () => {
+    setModalAberto(false);
+    setLivroSelecionado(null);
+    setMostrarPdf(false);
+  };
+
+  // Estado para mostrar o PDF embutido no modal
+  const [mostrarPdf, setMostrarPdf] = useState(false);
+
+  // Função para montar a URL do PDF pelo nome do arquivo (ajustado para o backend atual)
+  // Função para montar a URL do PDF usando o campo urlArquivoPDF do backend
+  const getPdfUrl = (livro) => {
+    if (!livro || !livro.urlArquivoPDF) return '';
+    // Remove barra inicial e 'uploads/' se existir
+    let fileName = livro.urlArquivoPDF;
+    if (fileName.startsWith('/')) fileName = fileName.substring(1);
+    if (fileName.startsWith('uploads/')) fileName = fileName.substring('uploads/'.length);
+    return `http://localhost:8080/api/arquivos/livro/` + fileName;
+  };
+
+  const abrirPdfLivro = (livro) => {
+    setMostrarPdf(true);
+  };
+
   return (
     <ThemeProvider theme={gothicTheme}>
       <CssBaseline />
@@ -412,94 +436,274 @@ const Home = () => {
                   Obras Primas
                 </Typography>
 
-                <Grid container spacing={4} justifyContent="center">
-                  {livrosExemplo.map((livro) => (
-                    <Grid item key={livro.id} xs={12} sm={6} md={3}>
-                      <Card sx={{
-                        height: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        position: 'relative',
-                        '&:hover': {
-                          '& .card-overlay': {
-                            opacity: 1
+                {carregando ? (
+                  <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+                    <Typography variant="h6" color="secondary">Carregando livros...</Typography>
+                  </Box>
+                ) : erro ? (
+                  <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+                    <Typography variant="h6" color="error">{erro}</Typography>
+                  </Box>
+                ) : livros.length === 0 ? (
+                  <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="300px" textAlign="center">
+                    <Typography variant="h6" sx={{ color: '#C7A34F', mb: 2 }}>Nenhum livro disponível</Typography>
+                    <Typography variant="body1" sx={{ color: '#AAAAAA' }}>
+                      Nossa biblioteca está vazia no momento. Volte em breve!
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Grid container spacing={4} justifyContent="center">
+                    {livros.map((livro) => (
+                      <Grid item key={livro.id} xs={12} sm={6} md={3}>
+                        <Card sx={{
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          '&:hover': {
+                            boxShadow: '0 12px 20px -8px rgba(0,0,0,0.6)',
+                            borderColor: 'rgba(199,163,79,0.4)',
                           }
-                        }
-                      }}>
-                        <CardMedia
-                          component="img"
-                          height="450"
-                          image={livro.imagem}
-                          alt={livro.titulo}
-                          sx={{
-                            filter: 'grayscale(20%)',
-                            '&:hover': {
-                              filter: 'none'
-                            }
-                          }}
-                        />
+                        }}>
+                          <CardMedia
+                            component="img"
+                            height="450"
+                            image={livro.urlCapa || 'https://via.placeholder.com/300x450?text=Sem+Capa'}
+                            alt={livro.titulo}
+                            sx={{
+                              filter: 'grayscale(20%)',
+                              transition: 'filter 0.3s',
+                              zIndex: 1
+                            }}
+                          />
+                          <Box
+                            className="card-overlay"
+                            sx={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              background: 'linear-gradient(to top, rgba(10, 10, 10, 0.9) 0%, rgba(10, 10, 10, 0.3) 100%)',
+                              opacity: 0,
+                              transition: 'opacity 0.3s',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'flex-end',
+                              p: 3,
+                              pointerEvents: 'none',
+                              zIndex: 2
+                            }}
+                          >
+                            <Typography variant="h6" sx={{ color: 'secondary.main', textShadow: '0 2px 8px #0A0A0A' }}>
+                              {livro.titulo}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'text.primary', mb: 2, textShadow: '0 2px 8px #0A0A0A' }}>
+                              {livro.autor}
+                            </Typography>
+                            <Typography variant="body2" sx={{
+                              color: 'text.secondary',
+                              fontSize: '0.8rem',
+                              fontStyle: 'italic',
+                              mb: 2,
+                              textShadow: '0 2px 8px #0A0A0A'
+                            }}>
+                              {livro.descricao}
+                            </Typography>
+                          </Box>
+                          <CardContent sx={{
+                            flexGrow: 1,
+                            textAlign: 'center',
+                            position: 'relative',
+                            zIndex: 3,
+                            backgroundColor: 'rgba(18, 18, 18, 0.7)'
+                          }}>
+                            <Typography gutterBottom variant="h6" component="div">
+                              {livro.titulo}
+                            </Typography>
+                            <Typography variant="body2" color="secondary">
+                              {livro.autor}
+                            </Typography>
+                            <Button
+                              variant="contained"
+                              color="secondary"
+                              sx={{ mt: 2, width: '100%' }}
+                              onClick={() => abrirModal(livro)}
+                            >
+                              Detalhes
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Container>
+            </Box>
+
+            {/* Modal de detalhes do livro */}
+            {livroSelecionado && (
+              <Fade in={modalAberto}>
+                <Box
+                  sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    bgcolor: 'rgba(10,10,10,0.85)',
+                    zIndex: 9999,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onClick={fecharModal}
+                >
+                  <Paper
+                    elevation={8}
+                    sx={{
+                      minWidth: { xs: '90vw', md: '700px' },
+                      maxWidth: '900px',
+                      maxHeight: '90vh',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      overflow: 'auto',
+                      position: 'relative',
+                      p: 0,
+                      boxShadow: '0 8px 32px rgba(40,0,0,0.7)',
+                      borderRadius: 3,
+                      cursor: 'auto',
+                    }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {/* Se mostrarPdf, exibe só o PDF */}
+                    {mostrarPdf && livroSelecionado && livroSelecionado.id ? (
+                      <Box sx={{ width: '100%', height: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', bgcolor: '#222' }}>
+                        {getPdfUrl(livroSelecionado) ? (
+                          <iframe
+                            src={getPdfUrl(livroSelecionado)}
+                            title={`PDF de ${livroSelecionado.titulo}`}
+                            width="100%"
+                            height="100%"
+                            style={{ border: 'none', borderRadius: '8px', background: '#222', minHeight: '500px' }}
+                            allow="autoplay"
+                          />
+                        ) : (
+                          <Typography variant="body2" color="error" sx={{ mt: 4 }}>
+                            PDF não disponível para este livro.
+                          </Typography>
+                        )}
+                        <Button
+                          variant="text"
+                          color="inherit"
+                          sx={{ mt: 2 }}
+                          onClick={fecharModal}
+                        >
+                          Fechar
+                        </Button>
+                      </Box>
+                    ) : (
+                      // ...informações do livro...
+                      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, width: '100%' }}>
+                        {/* Imagem do livro à esquerda */}
                         <Box
-                          className="card-overlay"
                           sx={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: 'linear-gradient(to top, rgba(10, 10, 10, 0.9) 0%, rgba(10, 10, 10, 0.3) 100%)',
-                            opacity: 0,
-                            transition: 'opacity 0.3s ease',
+                            width: { xs: '100%', md: '320px' },
+                            minHeight: { xs: '220px', md: '100%' },
+                            background: 'linear-gradient(135deg, #1a0000 60%, #C7A34F 100%)',
                             display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'flex-end',
-                            p: 3
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            p: 2,
                           }}
                         >
-                          <Typography variant="h6" sx={{ color: 'secondary.main' }}>
-                            {livro.titulo}
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: 'text.primary', mb: 2 }}>
-                            {livro.autor}
-                          </Typography>
-                          <Typography variant="body2" sx={{
-                            color: 'text.secondary',
-                            fontSize: '0.8rem',
-                            fontStyle: 'italic',
-                            mb: 2
-                          }}>
-                            {livro.descricao}
-                          </Typography>
+                          <Box
+                            component="img"
+                            src={livroSelecionado.urlCapa || 'https://via.placeholder.com/300x450?text=Sem+Capa'}
+                            alt={livroSelecionado.titulo}
+                            sx={{
+                              width: { xs: '180px', md: '260px' },
+                              height: 'auto',
+                              maxHeight: { xs: '300px', md: '480px' },
+                              objectFit: 'cover',
+                              borderRadius: 2,
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+                              background: '#222',
+                              border: '2px solid #C7A34F',
+                            }}
+                          />
                         </Box>
-                        <CardContent sx={{
-                          flexGrow: 1,
-                          textAlign: 'center',
-                          position: 'relative',
-                          zIndex: 1,
-                          backgroundColor: 'rgba(18, 18, 18, 0.7)'
-                        }}>
-                          <Typography gutterBottom variant="h6" component="div">
-                            {livro.titulo}
+                        {/* Informações à direita */}
+                        <Box
+                          sx={{
+                            flex: 1,
+                            p: { xs: 2, md: 4 },
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'flex-start',
+                            alignItems: 'flex-start',
+                            bgcolor: 'rgba(18,18,18,0.95)',
+                            minHeight: { xs: '200px', md: '100%' },
+                            gap: 2
+                          }}
+                        >
+                          <Typography variant="h4" sx={{ color: 'secondary.main', mb: 1 }}>
+                            {livroSelecionado.titulo}
                           </Typography>
-                          <Typography variant="body2" color="secondary">
-                            {livro.autor}
+                          <Typography variant="h6" sx={{ color: 'text.primary', mb: 1 }}>
+                            Autor: {livroSelecionado.autor}
+                          </Typography>
+                          <Typography variant="body1" sx={{ color: 'text.secondary', mb: 1 }}>
+                            {livroSelecionado.descricao}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'secondary.main', mb: 1 }}>
+                            Gênero: {livroSelecionado.genero || '-'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'secondary.main', mb: 1 }}>
+                            Idioma: {livroSelecionado.idioma || '-'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'secondary.main', mb: 1 }}>
+                            Número de páginas: {livroSelecionado.numeroPaginas || '-'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'secondary.main', mb: 1 }}>
+                            Ano de publicação: {livroSelecionado.anoPublicacao || '-'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'secondary.main', mb: 1 }}>
+                            Estoque: {livroSelecionado.estoque || '-'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'secondary.main', mb: 1 }}>
+                            Preço: {livroSelecionado.preco ? `R$ ${livroSelecionado.preco}` : '-'}
                           </Typography>
                           <Button
                             variant="contained"
                             color="secondary"
-                            sx={{
-                              mt: 2,
-                              width: '100%'
-                            }}
+                            sx={{ fontWeight: 700, fontSize: '1.1rem', mb: 1, alignSelf: 'flex-start' }}
+                            onClick={() => abrirPdfLivro(livroSelecionado)}
+                            disabled={!livroSelecionado.id}
                           >
-                            Explorar
+                            Comprar Livro
                           </Button>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Container>
-            </Box>
+                          <Button
+                            variant="text"
+                            color="inherit"
+                            sx={{ alignSelf: 'flex-start', mb: 1 }}
+                            onClick={fecharModal}
+                          >
+                            Fechar
+                          </Button>
+                          {!livroSelecionado.id && (
+                            <Typography variant="body2" color="error" sx={{ mb: 1 }}>
+                              PDF não disponível para este livro.
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                    )}
+                  </Paper>
+                </Box>
+              </Fade>
+            )}
 
             <Box component="section" sx={{ py: 10, backgroundColor: 'rgba(10, 10, 10, 0.5)' }}>
               <Container maxWidth="lg">
